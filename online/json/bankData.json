@@ -5,7 +5,7 @@
          "accountsData":{
             "accounts":[
                {
-                  "resourceId":"00000000-0000-0000-0000-000000000000",
+                  "resourceId":"00000000-0000-0000-0000-000000000088",
                   "iban":"000000000000000000000",
                   "currency":"EUR",
                   "product":"Girokonto",
