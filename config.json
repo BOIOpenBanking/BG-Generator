@@ -7,7 +7,7 @@
     "snipetsPath": "./snipets/",
     "apicVersion": "2018",
     "gatewayType": "datapower-gateway",
-    "securityRequired": "true",
+    "securityRequired": "false",
     "oauthScopes": {
         "view_accounts": "View Accounts"
     },

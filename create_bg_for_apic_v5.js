@@ -7,7 +7,6 @@ const exec = require('child_process');
 //const execSync = require('child_process').execSync;
 const inquirer = require('inquirer')
 
-
 var configFile  = process.argv[2] || './config.json';
 var config = require(configFile);
 
@@ -22,8 +21,8 @@ var gatewayType = config.gatewayType || "datapower-gateway";
 var securityRequired = config.securityRequired || "true";
 var oauthScopes = config.oauthScopes || {};
 var allowedScopes = config.allowedScopes || [];
-var apicMgmtServer = config.apicMgmtServer || "";
-var apicAlias = config.apicAlias || "cli";
+var apicMgmtServer = config.apicMgmtServer || null;
+var apicAlias = config.apicAlias || "apic";
 var devPortal = config.devPortal || null;
 
 var apicOrganization = new URL(gatewayBaseURL).pathname.split('/')[1]
@@ -42,7 +41,7 @@ if (!inFile || !outFile || !jsonStoreURL || !gatewayBaseURL) {
   console.log('- securityRequired (Optional) - Is security required (Default - true)');
   console.log('- oauthScopes (Optional) - List of OAuth scopes available (Default - no scopes)');
   console.log('- allowedScopes (Optional) -  List of OAuth scopes enabed for the API (Default - no scopes)');
-  console.log('- apicMgmtServer (Optional) - Management server uRL for pubish  (Default - empty)');
+  console.log('- apicMgmtServer (Optional) - Management server uRL for pubish, If not available skip publish (Default - null)');
   console.log('- apicAlias (Optional) - API Connect CLI alias (Default - apic)');
   console.log('\nExample:');
   console.log('{');
@@ -306,6 +305,10 @@ try {
         if (operationFileData) {
           operationCodeSnipet = operationCodeSnipet + "\n\n" + operationFileData;
         }
+        else {
+          operationCodeSnipet = operationCodeSnipet + "\nsession.output.write({});";
+          operationCodeSnipet = operationCodeSnipet + "\napim.output('application/json');";
+        }
 
         var caseItem = {
           "operations": [
@@ -332,110 +335,158 @@ try {
       if (err) console.log(err);
     })
 
-    // Start deploy wizard
-    console.log('Start deploy wizard...');
-    var questions = [
-      {
-        type: 'input',
-        default: apicMgmtServer,
-        name: 'apicMgmtServer',
-        message: "Server",
-      },
-      {
-        type: 'input',
-        name: 'apicUser',
-        message: "Username (skip if sso needed)",
-        validate: function(value) {
-          if (!value.length) {
-            if (apicVersion === "2018") {
-              console.error('\n  SSO not available for APIC v2018');
+    // Update gateway URLs in yaml's snippets
+    console.log("Update gateway URLs in yaml's snippets...");
+    if (securityRequired === "true") {
+      var data;
+      data = fs.readFileSync(snipetsPath + "oauth-utils_1.0.0.yaml", 'utf8');
+      fs.writeFileSync(outPath + "oauth-utils_1.0.0.yaml", data.replace(/https:\/\/api.eu-gb.apiconnect.appdomain.cloud\/coraladarboiorgil-dev\/sb/g, gatewayBaseURL), 'utf8');
+      data = fs.readFileSync(snipetsPath + "oauth-provider_1.0.0.yaml", 'utf8');
+      fs.writeFileSync(outPath + "oauth-provider_1.0.0.yaml", data.replace(/https:\/\/api.eu-gb.apiconnect.appdomain.cloud\/coraladarboiorgil-dev\/sb/g, gatewayBaseURL), 'utf8');
+    }
 
-              return false;
+    if (apicVersion === "5") {
+      if (securityRequired === "true") {
+        console.log("Create bg-product yaml...");
+        exec.execSync(`${apicAlias} create --type product --title "BG Product" --name bg-product --filename ${outPath}bg-product_1.0.0.yaml --apis "${outFile} oauth-provider_1.0.0.yaml"`, {stdio: 'inherit'});
+
+        console.log("Create utils-product yaml...");
+        exec.execSync(`${apicAlias} create --type product --title "Utils Product" --name utils-product --filename ${outPath}utils-product_1.0.0.yaml --apis "oauth-utils_1.0.0.yaml"`, {stdio: 'inherit'});
+      }
+      else {
+        console.log("Create bg-product yaml...");
+        exec.execSync(`${apicAlias} create --type product --title "BG Product" --name bg-product --filename ${outPath}bg-product_1.0.0.yaml --apis "${outFile}"`, {stdio: 'inherit'});
+      }
+    }
+    else if (apicVersion === "2018") {
+      console.log("Create bg-product yaml...");
+      exec.execSync(`${apicAlias} create:product --title "BG Product" --name bg-product --filename ${outPath}bg-product_1.0.0.yaml --apis "${outFile}"`, {stdio: 'inherit'});
+      fs.appendFileSync(outPath + "bg-product_1.0.0.yaml", "\n");
+      fs.appendFileSync(outPath + "bg-product_1.0.0.yaml", "gateways:\n");
+      fs.appendFileSync(outPath + "bg-product_1.0.0.yaml", "  - datapower-gateway\n");
+
+      if (securityRequired === "true") {
+        console.log("Create utils-product yaml...");
+        exec.execSync(`${apicAlias} create:product --title "Utils Product" --name utils-product --filename ${outPath}utils-product_1.0.0.yaml --apis "oauth-utils_1.0.0.yaml"`, {stdio: 'inherit'});
+        fs.appendFileSync(outPath + "utils-product_1.0.0.yaml", "\n");
+        fs.appendFileSync(outPath + "utils-product_1.0.0.yaml", "gateways:\n");
+        fs.appendFileSync(outPath + "utils-product_1.0.0.yaml", "  - datapower-gateway\n");
+      }
+    }
+
+    if (apicMgmtServer) {
+      // Start deploy wizard
+      console.log('Start deploy wizard...');
+      var questions = [
+        {
+          type: 'confirm',
+          default: true,
+          name: 'confirmMgmtServer',
+          message: "Confirm that server is " + apicMgmtServer,
+        },
+        {
+          type: 'input',
+          name: 'apicUser',
+          message: "Username (skip if sso needed)",
+          validate: function(value) {
+            if (!value.length) {
+              if (apicVersion === "2018") {
+                console.error('\n  SSO not available for APIC v2018');
+
+                return false;
+              }
+              else if (apicVersion === "5") {
+                console.log('\n  Passcode required, Generate a passcode from:');
+                console.log('  - apimanager.eu-gb.apiconnect.cloud.ibm.com: https://login.eu-gb.bluemix.net/UAALoginServerWAR/passcode');
+                console.log('  - us.apiconnect.ibmcloud.com: https://login.ng.bluemix.net/UAALoginServerWAR/passcode');
+                console.log('  - apimanager.au-syd.apiconnect.cloud.ibm.com: https://login.au-syd.bluemix.net/UAALoginServerWAR/passcode');
+                console.log('  - apimanager.eu-de.apiconnect.cloud.ibm.com: https://login.eu-de.bluemix.net/UAALoginServerWAR/passcode');
+                console.log('  Depends on your cloud location');
+                //exec.execSync(`${apicAlias} login --server ${apicMgmtServer} --sso`, {stdio: 'inherit'});
+
+                result = null;
+                return true;
+              }
             }
-            else if (apicVersion === "5") {
-              console.log('\n  Passcode required, Generate a passcode from:');
-              console.log('  - apimanager.eu-gb.apiconnect.cloud.ibm.com: https://login.eu-gb.bluemix.net/UAALoginServerWAR/passcode');
-              console.log('  - us.apiconnect.ibmcloud.com: https://login.ng.bluemix.net/UAALoginServerWAR/passcode');
-              console.log('  - apimanager.au-syd.apiconnect.cloud.ibm.com: https://login.au-syd.bluemix.net/UAALoginServerWAR/passcode');
-              console.log('  - apimanager.eu-de.apiconnect.cloud.ibm.com: https://login.eu-de.bluemix.net/UAALoginServerWAR/passcode');
-              console.log('  Depends on your cloud location');
-              //exec.execSync(`${apicAlias} login --server ${apicMgmtServer} --sso`, {stdio: 'inherit'});
-
-              result = null;
+            else {
               return true;
             }
-          }
-          else {
-            return true;
-          }
+          },
         },
-      },
-      {
-        type: 'password',
-        mask: '*',
-        name: 'apicPassword',
-        message: "Password / SSO Password (typing will be hidden)",
-      }
-    ]
+        {
+          type: 'password',
+          mask: '*',
+          name: 'apicPassword',
+          message: "Password / SSO Password (typing will be hidden)",
+        }
+      ]
 
-    inquirer.prompt(questions).then(answers => {
-      // Update all URLs within API's
-      console.log("Update all URLs within API's...");
-      if (securityRequired === "true") {
-        var data;
-        data = fs.readFileSync(snipetsPath + "oauth-utils_1.0.0.yaml", 'utf8');
-        fs.writeFileSync(outPath + "oauth-utils_1.0.0.yaml", data.replace(/https:\/\/api.eu-gb.apiconnect.appdomain.cloud\/coraladarboiorgil-dev\/sb/g, gatewayBaseURL), 'utf8');
-        data = fs.readFileSync(snipetsPath + "oauth-provider_1.0.0.yaml", 'utf8');
-        fs.writeFileSync(outPath + "oauth-provider_1.0.0.yaml", data.replace(/https:\/\/api.eu-gb.apiconnect.appdomain.cloud\/coraladarboiorgil-dev\/sb/g, gatewayBaseURL), 'utf8');
-      }
+      inquirer.prompt(questions).then(answers => {
+        console.log("Logout old cli session...");
+        //try { exec.execSync(`${apicAlias} logout --server ${apicMgmtServer}`, {stdio: 'inherit'}); } catch (ex) {}
 
-      console.log("Logout old cli session...");
-      //try { exec.execSync(`${apicAlias} logout --server ${answers['apicMgmtServer']}`, {stdio: 'inherit'}); } catch (ex) {}
+        try {
+          if (apicVersion === "5") {
+            console.log("Set cli connection string...");
+            exec.execSync(`${apicAlias} config:set catalog=apic-catalog://${apicMgmtServer}/orgs/${apicOrganization}/catalogs/${apicCatalog}`, {stdio: 'inherit'});
 
-      try {
-        if (apicVersion === "5") {
-          console.log("Set cli connection string...");
-          exec.execSync(`${apicAlias} config:set catalog=apic-catalog://${answers['apicMgmtServer']}/orgs/${apicOrganization}/catalogs/${apicCatalog}`, {stdio: 'inherit'});
+            if (answers['apicUser'].length > 0) {
+              console.log("Login v5 cli without sso...");
+              exec.execSync(`${apicAlias} login --server ${apicMgmtServer} --username ${answers['apicUser']} --password ${answers['apicPassword']}`, {stdio: 'inherit'});
+            }
+            else {
+              console.log("Login v5 cli with sso...");
+              exec.execSync(`${apicAlias} login --server ${apicMgmtServer} --sso --passcode ${answers['apicPassword']}`, {stdio: 'inherit'});
+            }
 
-          if (answers['apicUser'].length > 0) {
-            console.log("Login v5 cli without sso...");
-            exec.execSync(`${apicAlias} login --server ${answers['apicMgmtServer']} --username ${answers['apicUser']} --password ${answers['apicPassword']}`, {stdio: 'inherit'});
+            console.log("Clear old deployments and drafts...");
+            //try { exec.execSync(`${apicAlias} products:clear --confirm ${apicCatalog}`, {stdio: 'inherit'}); } catch (ex) {}
+            // keep bg-product in order to keep subscription
+            try { exec.execSync(`${apicAlias} products:delete utils-product:1.0.0`, {stdio: 'inherit'}); } catch (ex) {}
+            try { exec.execSync(`${apicAlias} drafts:delete --type product --server ${apicMgmtServer} --organization ${apicOrganization} bg-product:1.0.0`, {stdio: 'inherit'}); } catch (ex) {}
+            try { exec.execSync(`${apicAlias} drafts:delete --type product --server ${apicMgmtServer} --organization ${apicOrganization} utils-product:1.0.0`, {stdio: 'inherit'}); } catch (ex) {}
+
+            console.log("Publish bg-product...");
+            exec.execSync(`${apicAlias} drafts:push ${outPath}bg-product_1.0.0.yaml --server ${apicMgmtServer} --organization ${apicOrganization}`, {stdio: 'inherit'});
+            //exec.execSync(`${apicAlias} publish ${outPath}bg-product_1.0.0.yaml`, {stdio: 'inherit'});
+            exec.execSync(`${apicAlias} drafts:publish bg-product:1.0.0`, {stdio: 'inherit'});
+
+            if (securityRequired === "true") {
+              console.log("Publish utils-product...");
+              exec.execSync(`${apicAlias} drafts:push ${outPath}utils-product_1.0.0.yaml --server ${apicMgmtServer} --organization ${apicOrganization}`, {stdio: 'inherit'});
+              //exec.execSync(`${apicAlias} publish ${outPath}utils-product_1.0.0.yaml`, {stdio: 'inherit'});
+              exec.execSync(`${apicAlias} drafts:publish utils-product:1.0.0`, {stdio: 'inherit'});
+            }
           }
-          else {
-            console.log("Login v5 cli with sso...");
-            exec.execSync(`${apicAlias} login --server ${answers['apicMgmtServer']} --sso --passcode ${answers['apicPassword']}`, {stdio: 'inherit'});
+          else if (apicVersion === "2018") {
+            console.log("Set cli connection string...");
+            exec.execSync(`${apicAlias} config:set org=https://${apicMgmtServer}/api/orgs/${apicOrganization}`, {stdio: 'inherit'});
+            exec.execSync(`${apicAlias} config:set catalog=https://${apicMgmtServer}/api/catalogs/${apicOrganization}/${apicCatalog}`, {stdio: 'inherit'});
+
+            console.log("Login v2018 cli...");
+            exec.execSync(`${apicAlias} login --server ${apicMgmtServer} --username ${answers['apicUser']} --password ${answers['apicPassword']} --realm provider/default-idp-2`, {stdio: 'inherit'});
+
+            console.log("Clear old deployments and drafts...");
+            //try { exec.execSync(`${apicAlias} products:clear-all --scope catalog --confirm ${apicCatalog}`, {stdio: 'inherit'}); } catch (ex) {}
+            //try { exec.execSync(`${apicAlias} drafts:clear --confirm ${apicOrganization}`, {stdio: 'inherit'}); } catch (ex) {}
+            //try { exec.execSync(`${apicAlias} draft-products:clear-all --confirm ${apicOrganization}`, {stdio: 'inherit'}); } catch (ex) {}
+            //try { exec.execSync(`${apicAlias} draft-apis:clear-all --confirm ${apicOrganization}`, {stdio: 'inherit'}); } catch (ex) {}
+            // keep bg-product in order to keep subscription
+            try { exec.execSync(`${apicAlias} products:clear --scope catalog utils-product --confirm ${apicCatalog}`, {stdio: 'inherit'}); } catch (ex) {}
+            try { exec.execSync(`${apicAlias} draft-products:delete bg-product:1.0.0`, {stdio: 'inherit'}); } catch (ex) {}
+            try { exec.execSync(`${apicAlias} draft-products:delete utils-product:1.0.0`, {stdio: 'inherit'}); } catch (ex) {}
+
+            console.log("Publish bg-product...");
+            exec.execSync(`${apicAlias} draft-products:create ${outPath}bg-product_1.0.0.yaml`, {stdio: 'inherit'});
+            exec.execSync(`${apicAlias} products:publish ${outPath}bg-product_1.0.0.yaml`, {stdio: 'inherit'});
+
+            if (securityRequired === "true") {
+              console.log("Publish utils-product...");
+              exec.execSync(`${apicAlias} draft-products:create ${outPath}utils-product_1.0.0.yaml`, {stdio: 'inherit'});
+              exec.execSync(`${apicAlias} products:publish ${outPath}utils-product_1.0.0.yaml`, {stdio: 'inherit'});
+            }
           }
-
-          console.log("Clear old deployments and drafts...");
-          //try { exec.execSync(`${apicAlias} products:clear --confirm ${apicCatalog}`, {stdio: 'inherit'}); } catch (ex) {}
-          // keep bg-product in order to keep subscription
-          try { exec.execSync(`${apicAlias} products:delete utils-product:1.0.0`, {stdio: 'inherit'}); } catch (ex) {}
-          try { exec.execSync(`${apicAlias} drafts:delete --type product --server ${answers['apicMgmtServer']} --organization ${apicOrganization} bg-product:1.0.0`, {stdio: 'inherit'}); } catch (ex) {}
-          try { exec.execSync(`${apicAlias} drafts:delete --type product --server ${answers['apicMgmtServer']} --organization ${apicOrganization} utils-product:1.0.0`, {stdio: 'inherit'}); } catch (ex) {}
-
           if (securityRequired === "true") {
-            console.log("Create new bg-product...");
-            exec.execSync(`${apicAlias} create --type product --title "BG Product" --name bg-product --filename ${outPath}bg-product_1.0.0.yaml --apis "${outFile} oauth-provider_1.0.0.yaml"`, {stdio: 'inherit'});
-          }
-          else {
-            console.log("Create new bg-product without oauth provider...");
-            exec.execSync(`${apicAlias} create --type product --title "BG Product" --name bg-product --filename ${outPath}bg-product_1.0.0.yaml --apis "${outFile}"`, {stdio: 'inherit'});
-          }
-
-          console.log("Publish bg-product...");
-          exec.execSync(`${apicAlias} drafts:push ${outPath}bg-product_1.0.0.yaml --server ${answers['apicMgmtServer']} --organization ${apicOrganization}`, {stdio: 'inherit'});
-          //exec.execSync(`${apicAlias} publish ${outPath}bg-product_1.0.0.yaml`, {stdio: 'inherit'});
-          exec.execSync(`${apicAlias} drafts:publish bg-product:1.0.0`, {stdio: 'inherit'});
-
-          if (securityRequired === "true") {
-            console.log("Create new utils-product...");
-            exec.execSync(`${apicAlias} create --type product --title "Utils Product" --name utils-product --filename ${outPath}utils-product_1.0.0.yaml --apis "oauth-utils_1.0.0.yaml"`, {stdio: 'inherit'});
-
-            console.log("Publish utils-product...");
-            exec.execSync(`${apicAlias} drafts:push ${outPath}utils-product_1.0.0.yaml --server ${answers['apicMgmtServer']} --organization ${apicOrganization}`, {stdio: 'inherit'});
-            //exec.execSync(`${apicAlias} publish ${outPath}utils-product_1.0.0.yaml`, {stdio: 'inherit'});
-            exec.execSync(`${apicAlias} drafts:publish utils-product:1.0.0`, {stdio: 'inherit'});
-
             console.log('\n');
             console.log('Register & Subscribe application');
             console.log('Redirect URL mock: ' + gatewayBaseURL + '/oauth-utils/redirect-url');
@@ -443,72 +494,20 @@ try {
           }
 
           console.log('\n');
-          console.log('Post consent URL: ' + gatewayBaseURL + '/psd2/v1/consents');
-          console.log('Get accounts URL: ' + gatewayBaseURL + '/psd2/v1/accounts');
-
-          if (devPortal) {
-            console.log('\n');
-            console.log('Developer portal  URL: ' + devPortal);
-          }
-        }
-        else if (apicVersion === "2018") {
-          console.log("Set cli connection string...");
-          exec.execSync(`${apicAlias} config:set org=https://${answers['apicMgmtServer']}/api/orgs/${apicOrganization}`, {stdio: 'inherit'});
-          exec.execSync(`${apicAlias} config:set catalog=https://${answers['apicMgmtServer']}/api/catalogs/${apicOrganization}/${apicCatalog}`, {stdio: 'inherit'});
-
-          console.log("Login v2018 cli...");
-          exec.execSync(`${apicAlias} login --server ${answers['apicMgmtServer']} --username ${answers['apicUser']} --password ${answers['apicPassword']} --realm provider/default-idp-2`, {stdio: 'inherit'});
-
-          console.log("Clear old deployments and drafts...");
-          //try { exec.execSync(`${apicAlias} products:clear-all --scope catalog --confirm ${apicCatalog}`, {stdio: 'inherit'}); } catch (ex) {}
-          //try { exec.execSync(`${apicAlias} drafts:clear --confirm ${apicOrganization}`, {stdio: 'inherit'}); } catch (ex) {}
-          //try { exec.execSync(`${apicAlias} draft-products:clear-all --confirm ${apicOrganization}`, {stdio: 'inherit'}); } catch (ex) {}
-          //try { exec.execSync(`${apicAlias} draft-apis:clear-all --confirm ${apicOrganization}`, {stdio: 'inherit'}); } catch (ex) {}
-          // keep bg-product in order to keep subscription
-          try { exec.execSync(`${apicAlias} products:clear --scope catalog utils-product --confirm ${apicCatalog}`, {stdio: 'inherit'}); } catch (ex) {}
-          try { exec.execSync(`${apicAlias} draft-products:delete bg-product:1.0.0`, {stdio: 'inherit'}); } catch (ex) {}
-          try { exec.execSync(`${apicAlias} draft-products:delete utils-product:1.0.0`, {stdio: 'inherit'}); } catch (ex) {}
-
-          console.log("Create new bg-product...");
-          exec.execSync(`${apicAlias} create:product --title "BG Product" --name bg-product --filename ${outPath}bg-product_1.0.0.yaml --apis "${outFile}"`, {stdio: 'inherit'});
-          fs.appendFileSync(outPath + "bg-product_1.0.0.yaml", "\n");
-          fs.appendFileSync(outPath + "bg-product_1.0.0.yaml", "gateways:\n");
-          fs.appendFileSync(outPath + "bg-product_1.0.0.yaml", "  - datapower-gateway\n");
-
-          console.log("Publish bg-product...");
-          exec.execSync(`${apicAlias} draft-products:create ${outPath}bg-product_1.0.0.yaml`, {stdio: 'inherit'});
-          exec.execSync(`${apicAlias} products:publish ${outPath}bg-product_1.0.0.yaml`, {stdio: 'inherit'});
-
           if (securityRequired === "true") {
-            console.log("Create new utils-product...");
-            exec.execSync(`${apicAlias} create:product --title "Utils Product" --name utils-product --filename ${outPath}utils-product_1.0.0.yaml --apis "oauth-utils_1.0.0.yaml"`, {stdio: 'inherit'});
-            fs.appendFileSync(outPath + "utils-product_1.0.0.yaml", "\n");
-            fs.appendFileSync(outPath + "utils-product_1.0.0.yaml", "gateways:\n");
-            fs.appendFileSync(outPath + "utils-product_1.0.0.yaml", "  - datapower-gateway\n");
-
-            console.log("Publish utils-product...");
-            exec.execSync(`${apicAlias} draft-products:create ${outPath}utils-product_1.0.0.yaml`, {stdio: 'inherit'});
-            exec.execSync(`${apicAlias} products:publish ${outPath}utils-product_1.0.0.yaml`, {stdio: 'inherit'});
-
-            console.log('\n');
-            console.log('Register & Subscribe application');
-            console.log('Redirect URL mock: ' + gatewayBaseURL + '/oauth-utils/redirect-url');
-            console.log('Demo app URL: ' + gatewayBaseURL + '/oauth-utils/onboard-login');
+            console.log('Post consent URL: ' + gatewayBaseURL + '/psd2/v1/consents');
           }
-
-          console.log('\n');
-          console.log('Post consent URL: ' + gatewayBaseURL + '/psd2/v1/consents');
           console.log('Get accounts URL: ' + gatewayBaseURL + '/psd2/v1/accounts');
 
           if (devPortal) {
             console.log('\n');
             console.log('Developer portal  URL: ' + devPortal);
           }
+        } catch (ex) {
+          process.exit();
         }
-      } catch (ex) {
-        process.exit();
-      }
-    });
+      });
+    }
   })
 } catch (e) {
   console.log(e);
