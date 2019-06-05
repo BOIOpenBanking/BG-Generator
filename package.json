@@ -1,0 +1,25 @@
+{
+  "name": "bg-generator",
+  "version": "1.0.0",
+  "description": "",
+  "main": "create_bg_for_apic_v5.js",
+  "dependencies": {
+    "api-spec-converter": "^2.8.3",
+    "inquirer": "^6.3.1",
+    "js-yaml": "^3.13.1"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/YanivYuzis/BG-Generator.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/YanivYuzis/BG-Generator/issues"
+  },
+  "homepage": "https://github.com/YanivYuzis/BG-Generator#readme"
+}
