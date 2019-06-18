@@ -19,7 +19,24 @@
                 "href": "/v1/accounts/11110000-0000-0000-0000-000000000000/transactions"
               }
             }
+          },
+          {
+            "resourceId": "00000000-0000-0000-0000-000000000077",
+            "iban": "000000000000000000000",
+            "currency": "EUR",
+            "product": "Girokonto",
+            "cashAccountType": "CACC",
+            "name": "Main Account",
+            "_links": {
+              "balances": {
+                "href": "/v1/accounts/00000000-0000-0000-0000-000000000000/balances"
+              },
+              "transactions": {
+                "href": "/v1/accounts/00000000-0000-0000-0000-000000000000/transactions"
+              }
+            }
           }
+        
         ]
       },
       "accountsBalances": [
@@ -79,92 +96,6 @@
             "_links": {
               "account": {
                 "href": "/v1/accounts/11110000-0000-0000-0000-000000000000"
-              }
-            }
-          }
-        }
-      ],
-      "consents": []
-    },
-     {
-      "id": "",
-      "accountsData": {
-        "accounts": [
-          {
-            "resourceId": "00000000-0000-0000-0000-000000000077",
-            "iban": "000000000000000000000",
-            "currency": "EUR",
-            "product": "Girokonto",
-            "cashAccountType": "CACC",
-            "name": "Main Account",
-            "_links": {
-              "balances": {
-                "href": "/v1/accounts/00000000-0000-0000-0000-000000000000/balances"
-              },
-              "transactions": {
-                "href": "/v1/accounts/00000000-0000-0000-0000-000000000000/transactions"
-              }
-            }
-          }
-        ]
-      },
-      "accountsBalances": [
-        {
-          "account": {
-            "iban": "000000000000000000000"
-          },
-          "balances": [
-            {
-              "balanceType": "closingBooked",
-              "balanceAmount": {
-                "currency": "EUR",
-                "amount": "9999999.00"
-              },
-              "referenceDate": "2022-2-22"
-            }
-          ]
-        }
-      ],
-      "acountTransactions": [
-        {
-          "account": {
-            "iban": "000000000000000000000"
-          },
-          "transactions": {
-            "booked": [
-              {
-                "transactionId": "000000",
-                "debtorName": "Paul Simpson",
-                "debtorAccount": {
-                  "iban": "NL76RABO0359400371"
-                },
-                "transactionAmount": {
-                  "currency": "EUR",
-                  "amount": "9999999.00"
-                },
-                "bookingDate": "2017-10-25",
-                "valueDate": "2022-2-22",
-                "remittanceInformationUnstructured": "Example 2"
-              }
-            ],
-            "pending": [
-              {
-                "transactionId": "000000",
-                "creditorName": "Claude Renault",
-                "creditorAccount": {
-                  "iban": "FR7612345987650123456789014"
-                },
-                "transactionAmount": {
-                  "currency": "EUR",
-                  "amount": "9999999.03"
-                },
-                "valueDate": "2022-2-22",
-                "remittanceInformationUnstructured": "Example 3"
-              }
-            ],
-            "_links": {
-              "account": {
-                "href": "/v1/accounts/00000000-0000-0000-0000-000000000000"
               }
             }
           }
