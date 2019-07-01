@@ -21,18 +21,18 @@
             }
           },
           {
-            "resourceId": "00000000-0000-0000-0000-000000000077",
-            "iban": "000000000000000000000",
+            "resourceId": "3dc3d5b3-7023-4848-9853-f5400a64e81g",
+            "iban": "DE2310010010123456788",
             "currency": "EUR",
             "product": "Girokonto",
             "cashAccountType": "CACC",
             "name": "Main Account",
             "_links": {
               "balances": {
-                "href": "/v1/accounts/00000000-0000-0000-0000-000000000000/balances"
+                "href": "/v1/accounts/3dc3d5b3-7023-4848-9853-f5400a64e81g/balances"
               },
               "transactions": {
-                "href": "/v1/accounts/00000000-0000-0000-0000-000000000000/transactions"
+                "href": "/v1/accounts/3dc3d5b3-7023-4848-9853-f5400a64e81g/transactions"
               }
             }
           }
