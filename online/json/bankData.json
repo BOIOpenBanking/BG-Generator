@@ -37,7 +37,48 @@
             }
           }
         
-        ]
+        ],
+          
+        "cardAccounts": [
+    {
+      "_links": {
+        "balances": {
+          "href": "/v1/payments/sepa-credit-transfers/1234-wertiq-983"
+        },
+        "transactions": {
+          "href": "/v1/payments/sepa-credit-transfers/1234-wertiq-983"
+        }
+      },
+      "balances": [
+        {
+          "balanceAmount": {
+            "amount": "123",
+            "currency": "EUR"
+          },
+          "balanceType": "expected",
+          "creditLimitIncluded": false,
+          "lastChangeDateTime": "2006-05-12T05:04:37.532Z",
+          "lastCommittedTransaction": "Vidal",
+          "referenceDate": "Sat Dec 09"
+        }
+      ],
+      "creditLimit": {
+        "amount": "123",
+        "currency": "EUR"
+      },
+      "currency": "EUR",
+      "details": "dovomgalliehajoihpadfiftahozbiflijzijiljen",
+      "maskedPan": "123456xxxxxx1234",
+      "name": "Blanche Powell",
+      "product": "nabkuu",
+      "resourceId": "3dc3d5b3-7023-4848-9853-f5400a64e80f",
+      "status": "blocked",
+      "usage": "PRIV"
+    }
+  ]
+
+       
+          
       },
       "accountsBalances": [
         {
