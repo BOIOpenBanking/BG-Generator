@@ -5,7 +5,7 @@
       "accountsData": {
         "accounts": [
           {
-            "resourceId": "11110000-0000-0000-0000-000000000088",
+            "resourceId": "3dc3d5b3-7023-4848-9853-f5400a64e80f",
             "iban": "DE40100100103307118608",
             "currency": "USD",
             "product": "Girokonto",
@@ -13,10 +13,10 @@
             "name": "Second Account",
             "_links": {
               "balances": {
-                "href": "/v1/accounts/11110000-0000-0000-0000-000000000000/balances"
+                "href": "/v1/accounts/3dc3d5b3-7023-4848-9853-f5400a64e80f/balances"
               },
               "transactions": {
-                "href": "/v1/accounts/11110000-0000-0000-0000-000000000000/transactions"
+                "href": "/v1/accounts/3dc3d5b3-7023-4848-9853-f5400a64e80f/transactions"
               }
             }
           },
