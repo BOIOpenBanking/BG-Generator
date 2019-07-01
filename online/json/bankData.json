@@ -6,7 +6,7 @@
         "accounts": [
           {
             "resourceId": "11110000-0000-0000-0000-000000000088",
-            "iban": "111100000000000000000",
+            "iban": "DE40100100103307118608",
             "currency": "USD",
             "product": "Girokonto",
             "cashAccountType": "CACC",
