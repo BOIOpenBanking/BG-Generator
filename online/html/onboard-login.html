@@ -1,35 +1,112 @@
 <!DOCTYPE html>
 <html>
-   <body>
-      <h1>Application from for OAuth access</h1>
-      <form id="app_form" action="">
-         Client ID:<br>
-         <input id="client_id" style="width:300px" type="text" name="client_id">
-         <br><br>Redirect URL:<br>
-         <input id="redirect_uri" style="width:550px" type="text" name="redirect_uri">
-         <br><br>Scope:<br>
-         <input id="scope" style="width:150px" type="text" name="scope">
-         <br><br><br>
-         <input type="hidden" name="response_type" value="token">
-         <input style="font-size:20px;" type="submit" value="Submit">
-      </form>
-      <script>
-        var protocol = window.location.protocol;
-        var port = window.location.port;
-        var hostName = window.location.hostname;
-        var organization = new URL(window.location.href).pathname.split('/')[1];
-        var catalog = new URL(window.location.href).pathname.split('/')[2];
+  <head>
+    <title>Dummy Application OAuth Test</title>
+  </head>
+  <body>
+    <h1>Dummy Application OAuth Test</h1>
+    <h4>Client ID:</h4>
+    <input id="client_id_helper" style="width:300px" type="text" name="client_id_helper" oninput="clientChanged()">
+    <h4>Client Secret:</h4>
+    <input id="client_secret" style="width:350px" type="text" name="client_secret">
+    <form target="_blank" id="authorize_form" action="">
+      <input type="hidden" id="client_id" style="width:300px" type="text" name="client_id">
+      <h4>Redirect URL:</h4>
+      <input id="redirect_uri" style="width:550px" type="text" name="redirect_uri">
+      <h4>Scope:</h4>
+      <input id="scope" style="width:150px" type="text" name="scope">
+      <h4>Response Type:</h4>
+      <select id="response_type" name="response_type" onChange="typeChanged(this.options[this.selectedIndex].value)">
+        <option value="code">Code</option>
+        <option value="token">Token</option>
+      </select>
+      <br><br>
+    </form>
+    <button style="font-size:15px;" type="submit" form="authorize_form" value="Authorize">Authorize</button>
+    <br><br>
+    <div id="token_form">
+      <h4>Access Code:</h4>
+      <input id="access_code" style="width:550px" type="text" name="access_code">
+      <br><br>
+      <button style="font-size:15px;" onclick="getToken()">Get Token</button>
+      <p id="getTokenResponse"></p>
+      <br>
+    </div>
+    <div id="test_panel" style="display: none;">
+      <button style="font-size:20px;" onclick="testPanel()">Test Panel</button>
+      <br>
+    </div>
+    <script>
+      var protocol = window.location.protocol;
+      var port = window.location.port;
+      var hostName = window.location.hostname;
+      var organization = new URL(window.location.href).pathname.split('/')[1];
+      var catalog = new URL(window.location.href).pathname.split('/')[2];
 
-        var urlParams = new URLSearchParams(window.location.search);
-        var clientId = urlParams.get('clientID') || urlParams.get('clientId') || urlParams.get('clientid') || urlParams.get('client_id') || "";
-        var redirectUrl = urlParams.get('redirectURL') || urlParams.get('redirectUrl') || urlParams.get('redirect_url') || protocol +'//'+ hostName + (port ? ':' + port: '') + '/' + organization + '/' + catalog + '/oauth-utils/redirect-url';
-        var scope = urlParams.get('scope') || "view_accounts";
+      var urlParams = new URLSearchParams(window.location.search);
+      var clientId = urlParams.get('ClientID') || urlParams.get('ClientId') || urlParams.get('clientID') || urlParams.get('clientId') || urlParams.get('clientid') || urlParams.get('client_id') || "";
+      var clientSecret = urlParams.get('ClientSecret') || urlParams.get('clientSecret') || urlParams.get('clientsecret') || urlParams.get('client_secret') || "";
+      var redirectUrl = urlParams.get('RedirectUrl') || urlParams.get('RedirectURL') || urlParams.get('redirectURL') || urlParams.get('redirectUrl') || urlParams.get('redirect_url') || protocol +'//'+ hostName + (port ? ':' + port: '') + '/' + organization + '/' + catalog + '/oauth-utils/redirect-url';
+      var scope = urlParams.get('Scope') || urlParams.get('scope') || "view_accounts";
+      var response_type = urlParams.get('ResponseType') || urlParams.get('response_type') || urlParams.get('responsetype') || urlParams.get('responseType') || "code";
 
-        document.getElementById('client_id').value = clientId;
-        document.getElementById('redirect_uri').value = redirectUrl;
-        document.getElementById('scope').value = scope;
+      document.getElementById('client_id').value = clientId;
+      document.getElementById('client_id_helper').value = clientId;
+      document.getElementById('client_secret').value = clientSecret;
+      document.getElementById('redirect_uri').value = redirectUrl;
+      document.getElementById('scope').value = scope;
+      document.getElementById('response_type').value = response_type;
 
-        document.getElementById('app_form').action = protocol +'//'+ hostName + (port ? ':' + port: '') + '/' + organization + '/' + catalog + '/oauth-provider/oauth2/authorize';
-      </script>
-   </body>
+      document.getElementById('authorize_form').action = protocol +'//'+ hostName + (port ? ':' + port: '') + '/' + organization + '/' + catalog + '/oauth-provider/oauth2/authorize';
+
+      function clientChanged() {
+        document.getElementById("client_id").value = document.getElementById('client_id_helper').value;
+      }
+
+      function typeChanged(value) {
+        var token_form = document.getElementById("token_form");
+
+        if (value === "code") {
+          token_form.style.display = "block";
+        } else if (value === "token") {
+          token_form.style.display = "none";
+        }
+      }
+
+      function getToken() {
+        var test_panel = document.getElementById("test_panel");
+        test_panel.style.display = "none";
+
+        var xmlhttp = new XMLHttpRequest();
+        var url = protocol +'//'+ hostName + (port ? ':' + port: '') + '/' + organization + '/' + catalog + '/oauth-provider/oauth2/token';
+        var accessCode = document.getElementById('access_code').value;
+
+        clientId = document.getElementById('client_id').value;
+        clientSecret = document.getElementById('client_secret').value;
+        redirectUrl = document.getElementById('redirect_uri').value;
+        scope = document.getElementById('scope').value;
+
+        xmlhttp.onreadystatechange = function() {
+          if (this.readyState == 4) {
+            myFunction(this.responseText, this.status);
+          }
+        };
+        xmlhttp.open("POST", url, true);
+        xmlhttp.setRequestHeader("Authorization", "Basic " + btoa(clientId + ":" + clientSecret));
+        xmlhttp.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+        xmlhttp.send("grant_type=authorization_code&code=" + accessCode + "&redirect_uri=" + redirectUrl + "&scope=" + scope);
+      }
+
+      function myFunction(responseText, status) {
+        document.getElementById("getTokenResponse").innerHTML = responseText;
+        if (status === 200) {
+          test_panel.style.display = "block";
+        }
+      }
+
+      function testPanel() {
+        window.location.href = 'redirect-url?token=' + JSON.parse(document.getElementById("getTokenResponse").innerHTML).access_token;
+      }
+    </script>
+  </body>
 </html>
