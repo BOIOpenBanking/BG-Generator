@@ -1,17 +1,25 @@
 <!DOCTYPE html>
 <html>
-   <body>
+  <head>
+    <title>Dummy Redirect URL</title>
+  </head>
+  <body>
+    <div id="accessCoden" style="display: none;">
+      <h1>Access Code Info</h1>
+      <h4>Access Code:</h4>
+      <p id="codePlaceHolder"></p>
+    </div>
+    <div id="accessToken" style="display: none;">
       <h1>Access Token Info</h1>
       <p id="oauthInfo"></p>
-      <br>
       <h2>Test Panel</h2>
-      Access Token:<br>
+      <h4>Access Token:</h4>
       <input style="width:500px" id="tokenPlaceHolder" type="text">
       <br><br>
       <button style="font-size:15px;" onclick="getConsent()">Get Consent</button>
       <p id="getConsentResponse"></p>
       <br>
-      <br>Consent ID:<br>
+      <h4>Consent ID:</h4>
       <input style="width:200px" id="consentPlaceHolder" type="text">
       <br><br>
       <button style="font-size:15px;" onclick="getAccountList()">Test getAccountList</button>
@@ -19,66 +27,90 @@
       <br><br>
       <button style="font-size:28px;" onclick="restart()">Restart</button>
       <br>
-      <script>
-         var urlParams = window.location.hash.substring(1) || "";
-         var accessToken = urlParams.split('=')[1].split('&')[0] || "";
+    </div>
 
-         document.getElementById("oauthInfo").innerHTML = urlParams.replace(/&/g, '<br>');
-         document.getElementById("tokenPlaceHolder").value = accessToken;
+    <script>
+      var accessCodenDiv = document.getElementById("accessCoden");
+      var accessTokenDiv = document.getElementById("accessToken");
 
-         var protocol = window.location.protocol;
-         var port = window.location.port;
-         var hostName = window.location.hostname;
-         var organization = new URL(window.location.href).pathname.split('/')[1];
-         var catalog = new URL(window.location.href).pathname.split('/')[2];
+      var urlSearchParams = new URLSearchParams(window.location.search);
+      var code = urlSearchParams.get('code');
+      var token = urlSearchParams.get('token');
 
-         function getConsent() {
-            document.getElementById("getConsentResponse").innerHTML ="";
+      if (code) {
+        accessCodenDiv.style.display = "block";
+        accessTokenDiv.style.display = "none";
 
-            var xmlhttp = new XMLHttpRequest();
-            var url = '/' + organization + '/' + catalog + '/psd2/v1/consents';
+        document.getElementById("codePlaceHolder").innerHTML = code;
+      } else if (token) {
+        accessCodenDiv.style.display = "none";
+        accessTokenDiv.style.display = "block";
 
-            xmlhttp.onreadystatechange = function() {
-               if (this.readyState == 4) {
-                  var myArr = JSON.parse(this.responseText);
-                  myFunction(myArr);
-               }
-            };
-            xmlhttp.open("POST", url, true);
-            xmlhttp.setRequestHeader("Authorization", 'Bearer ' + document.getElementById("tokenPlaceHolder").value);
-            xmlhttp.setRequestHeader("X-Request-ID", Math.random() * (999999999 - 100000000));
-            xmlhttp.send();
+        document.getElementById("tokenPlaceHolder").value = token;
+      } else {
+        accessCodenDiv.style.display = "none";
+        accessTokenDiv.style.display = "block";
 
-            function myFunction(myArr) {
-               document.getElementById("getConsentResponse").innerHTML = JSON.stringify(myArr);
-               document.getElementById("consentPlaceHolder").value = myArr.consentId;
-            }
-         }
-         function getAccountList() {
-            document.getElementById("getAccountListResponse").innerHTML ="";
+        var urlParams = window.location.hash.substring(1) || "";
+        var accessToken = urlParams.split('=')[1].split('&')[0] || "";
 
-            var xmlhttp = new XMLHttpRequest();
-            var url = '/' + organization + '/' + catalog + '/psd2/v1/accounts';
+        document.getElementById("oauthInfo").innerHTML = urlParams.replace(/&/g, '<br>');
+        document.getElementById("tokenPlaceHolder").value = accessToken;
+      }
 
-            xmlhttp.onreadystatechange = function() {
-               if (this.readyState == 4) {
-                  var myArr = JSON.parse(this.responseText);
-                  myFunction(myArr);
-               }
-            };
-            xmlhttp.open("GET", url, true);
-            xmlhttp.setRequestHeader("Authorization", 'Bearer ' + document.getElementById("tokenPlaceHolder").value);
-            xmlhttp.setRequestHeader("Consent-ID", document.getElementById("consentPlaceHolder").value);
-            xmlhttp.setRequestHeader("X-Request-ID", Math.random() * (999999999 - 100000000));
-            xmlhttp.send();
+      var protocol = window.location.protocol;
+      var organization = new URL(window.location.href).pathname.split('/')[1];
+      var catalog = new URL(window.location.href).pathname.split('/')[2];
 
-            function myFunction(myArr) {
-               document.getElementById("getAccountListResponse").innerHTML = JSON.stringify(myArr);
-            }
-         }
-         function restart() {
-           window.location.href = protocol +'//'+ hostName + (port ? ':' + port: '') + '/' + organization + '/' + catalog + '/oauth-utils/onboard-login';
-         }
-      </script>
-   </body>
+      function getConsent() {
+        document.getElementById("getConsentResponse").innerHTML = "";
+
+        var xmlhttp = new XMLHttpRequest();
+        var url = '/' + organization + '/' + catalog + '/psd2/v1/consents';
+
+        xmlhttp.onreadystatechange = function() {
+          if (this.readyState == 4) {
+            var myArr = JSON.parse(this.responseText);
+            myFunction(myArr);
+          }
+        };
+        xmlhttp.open("POST", url, true);
+        xmlhttp.setRequestHeader("Authorization", 'Bearer ' + document.getElementById("tokenPlaceHolder").value);
+        xmlhttp.setRequestHeader("X-Request-ID", Math.random() * (999999999 - 100000000));
+        xmlhttp.send();
+
+        function myFunction(myArr) {
+          document.getElementById("getConsentResponse").innerHTML = JSON.stringify(myArr);
+          document.getElementById("consentPlaceHolder").value = myArr.consentId;
+        }
+      }
+
+      function getAccountList() {
+        document.getElementById("getAccountListResponse").innerHTML ="";
+
+        var xmlhttp = new XMLHttpRequest();
+        var url = '/' + organization + '/' + catalog + '/psd2/v1/accounts';
+
+        xmlhttp.onreadystatechange = function() {
+          if (this.readyState == 4) {
+            var myArr = JSON.parse(this.responseText);
+            myFunction(myArr);
+          }
+        };
+        xmlhttp.open("GET", url, true);
+        xmlhttp.setRequestHeader("Authorization", 'Bearer ' + document.getElementById("tokenPlaceHolder").value);
+        xmlhttp.setRequestHeader("Consent-ID", document.getElementById("consentPlaceHolder").value);
+        xmlhttp.setRequestHeader("X-Request-ID", Math.random() * (999999999 - 100000000));
+        xmlhttp.send();
+
+        function myFunction(myArr) {
+          document.getElementById("getAccountListResponse").innerHTML = JSON.stringify(myArr);
+        }
+      }
+
+      function restart() {
+        window.location.href = 'onboard-login';
+      }
+    </script>
+  </body>
 </html>
