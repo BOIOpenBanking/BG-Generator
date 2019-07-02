@@ -11,17 +11,20 @@ apim.readInputAsJSON(function(err, bankData) {
         var myAccountsInfo = bankData.allAccounts.find(item => item.id === userId);
         var myAccounts = myAccountsInfo.accountsData;
         var reqAccount = myAccounts.accounts.find(item => item.resourceId === accountId);
+
+        var withBalanceQuery = apim.getvariable('request.parameters.withBalance') || true;
+        if (withBalanceQuery === "false") {
+          delete reqAccount._links;
+        }
         result.account = reqAccount;
 
         if (!result) {
             result = {};
         }
     } catch (e) {
-        console.error(e);
-        
-        result = {};
+        result = e;
     }
 
     apim.output('application/json');
-    session.output.write(result);
+    session.output.write(JSON.stringify(result, null, 2));
 });
