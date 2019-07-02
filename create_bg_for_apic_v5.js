@@ -102,6 +102,8 @@ try {
 
     doc['host'] = '$(catalog.host)';
 
+    // Replace all oneOf definitions with object
+    console.log('Replace all oneOf definitions with object...');
     Object.keys(doc.paths).forEach(function(path) {
       Object.keys(doc['paths'][path]).forEach(function(op) {
         // Replace all oneOf occurence in requests with object
@@ -138,7 +140,7 @@ try {
       })
     });
 
-    ///definitions/periodicPaymentInitiationMultipartBody/properties/xml_sct/oneOf
+    // Replace all oneOf occurence in definitions with object
     Object.keys(doc['definitions']).forEach(function(def) {
       if (doc['definitions'][def]['properties']) {
         Object.keys(doc['definitions'][def]['properties']).forEach(function(prop) {
