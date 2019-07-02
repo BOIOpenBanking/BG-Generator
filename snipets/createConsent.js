@@ -5,10 +5,10 @@ if (apim.getvariable('request.authorization')) {
     userId = apim.getvariable('oauth.resource-owner');
 }
 
-var result = { 
+var result = {
     "consentStatus": "received",
     "consentId": consentId,
-    "_links": 
+    "_links":
       {
         "self": {"href": "/v1/consents/" + consentId},
         "scaStatus": {"href": "v1/consents/" + consentId + "/authorisations/" + userId},
@@ -17,4 +17,4 @@ var result = {
     }
 
 apim.output('application/json');
-session.output.write(result);
+session.output.write(JSON.stringify(result, null, 2));
