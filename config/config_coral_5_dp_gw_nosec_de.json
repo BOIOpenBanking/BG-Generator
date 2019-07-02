@@ -9,7 +9,7 @@
     "apicVersion": "5",
     "gatewayType": "datapower-gateway",
     "apiSpec": "swagger",
-    "securityRequired": "fasle",
+    "securityRequired": "false",
     "oauthFlow": "implicit",
     "oauthScopes": {
         "view_accounts": "View Accounts"
