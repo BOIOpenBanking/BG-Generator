@@ -18,11 +18,9 @@ apim.readInputAsJSON(function(err, bankData) {
             result = {};
         }
     } catch (e) {
-        console.error(e);
-        
-        result = {};
+        result = e;
     }
 
     apim.output('application/json');
-    session.output.write(result);
+    session.output.write(JSON.stringify(result, null, 2));
 });
