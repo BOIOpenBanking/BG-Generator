@@ -41,6 +41,32 @@
       "cardAccountsData": {
         "cardAccounts": [
           {
+            "resourceId": "3dc3d5b3-7023-4848-9853-f5400a64e80f",
+            "maskedPan": "525412******3241",
+            "currency": "EUR",
+            "name": "Blanche Powell",
+            "product": "nabkuu",
+            "status": "enabled",
+            "creditLimit": {
+              "currency": "EUR",
+              "amount": "15000"
+            },
+            "balances": [
+              {
+                "balanceType": "interimBooked",
+                "balanceAmount": {
+                  "currency": "EUR",
+                  "amount": "14355.78"
+                }
+              },
+              {
+                "balanceType": "nonInvoiced",
+                "balanceAmount": {
+                  "currency": "EUR",
+                  "amount": "4175.86"
+                }
+              }
+            ],
             "_links": {
               "balances": {
                 "href": "/v1/card-accounts/3dc3d5b3-7023-4848-9853-f5400a64e80f/balances"
@@ -48,32 +74,7 @@
               "transactions": {
                 "href": "/v1/card-accounts/3dc3d5b3-7023-4848-9853-f5400a64e80f/transactions"
               }
-            },
-            "balances": [
-              {
-                "balanceAmount": {
-                  "amount": "123",
-                  "currency": "EUR"
-                },
-                "balanceType": "expected",
-                "creditLimitIncluded": false,
-                "lastChangeDateTime": "2006-05-12T05:04:37.532Z",
-                "lastCommittedTransaction": "Vidal",
-                "referenceDate": "Sat Dec 09"
-              }
-            ],
-            "creditLimit": {
-              "amount": "123",
-              "currency": "EUR"
-            },
-            "currency": "EUR",
-            "details": "dovomgalliehajoihpadfiftahozbiflijzijiljen",
-            "maskedPan": "123456xxxxxx1234",
-            "name": "Blanche Powell",
-            "product": "nabkuu",
-            "resourceId": "3dc3d5b3-7023-4848-9853-f5400a64e80f",
-            "status": "blocked",
-            "usage": "PRIV"
+            }
           }
         ]
       },
