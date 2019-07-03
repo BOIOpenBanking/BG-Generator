@@ -11,8 +11,8 @@ apim.readInputAsJSON(function(err, bankData) {
         var myAccountsInfo = bankData.allAccounts.find(item => item.id === userId);
         var myAccounts = myAccountsInfo.accountsData;
         var reqAccount = myAccounts.accounts.find(item => item.resourceId === accountId);
-        var reqAccountIban = reqAccount.iban
-        result = myAccountsInfo.acountTransactions.find(item => item.account.iban === reqAccountIban);
+        var reqAccountIban = reqAccount.iban;
+        result = myAccountsInfo.accountsTransactions.find(item => item.account.iban === reqAccountIban);
 
         if (!result) {
             result = {};
