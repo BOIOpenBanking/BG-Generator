@@ -163,7 +163,65 @@
           }
         }
       ],
-      "cardAcountTransactions": [],
+      "cardAcountTransactions": [
+        {
+          "cardAccount": {
+            "maskedPan": "525412******3241"
+          },
+          "transactions": {
+            "booked": [
+              {
+                "cardTransactionId": "201710020036959",
+                "transactionAmount": {
+                  "currency": "EUR",
+                  "amount": "256.67"
+                },
+                "transactionDate": "2017-10-25",
+                "bookingDate": "2017-10-26",
+                "originalAmount": {
+                  "currency": "SEK",
+                  "amount": "2499"
+                },
+                "cardAcceptorAddress": {
+                  "city": "STOCKHOLM",
+                  "country": "SE"
+                },
+                "maskedPan": "525412******3241",
+                "proprietaryBankTransactionCode": "PURCHASE",
+                "invoiced": false,
+                "transactionDetails": "WIFIMARKET.SE"
+              },
+              {
+                "cardTransactionId": "201710020091863",
+                "transactionAmount": {
+                  "currency": "EUR",
+                  "amount": "10.72"
+                },
+                "transactionDate": "2017-10-25",
+                "bookingDate": "2017-10-26",
+                "originalAmount": {
+                  "currency": "SEK",
+                  "amount": "99"
+                },
+                "cardAcceptorAddress": {
+                  "city": "STOCKHOLM",
+                  "country": "SE"
+                },
+                "maskedPan": "525412******8999",
+                "proprietaryBankTransactionCode": "PURCHASE",
+                "invoiced": false,
+                "transactionDetails": "ICA SUPERMARKET SKOGHA"
+              }
+            ],
+            "pending": [],
+            "_links": {
+              "cardAccount": {
+                "href": "/v1/card-accounts/3d9a81b3-a47d-4130-8765-a9c0ff861b99"
+              }
+            }
+          }
+        }
+      ],
       "consents": []
     },
     {
