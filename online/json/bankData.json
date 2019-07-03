@@ -118,7 +118,7 @@
           }
         }
       ],
-      "acountTransactions": [
+      "accountsTransactions": [
         {
           "account": {
             "iban": "DE40100100103307118608"
@@ -163,7 +163,7 @@
           }
         }
       ],
-      "cardAcountTransactions": [
+      "cardAccountsTransactions": [
         {
           "cardAccount": {
             "maskedPan": "525412******3241"
