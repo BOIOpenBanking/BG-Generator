@@ -16,7 +16,7 @@ if (userId ) {
       if (!consentId) {
         apim.setvariable('error_code', 'CONSENT_UNKNOWN', 'set');
         apim.setvariable('http_code', '500', 'set');
-        apim.error('BG_ERROR');            }
+        apim.error('BG_ERROR');
       } else if (oauthConsentId != consentId) {
         apim.setvariable('error_code', 'CONSENT_UNKNOWN', 'set');
         apim.setvariable('http_code', '500', 'set');
