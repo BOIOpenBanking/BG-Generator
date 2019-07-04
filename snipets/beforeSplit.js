@@ -6,7 +6,7 @@ if (userId ) {
   if (!requestId) {
     apim.setvariable('error_code', 'FORMAT_ERROR', 'set');
     apim.setvariable('http_code', '500', 'set');
-    apim.error('BG_ERROR');            }
+    apim.error('BG_ERROR');
   } else {
     var operationId = apim.getvariable('api.operation.id');
     if (operationId != 'createConsent') {
