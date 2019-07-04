@@ -424,5 +424,37 @@
       "id": "riemann",
       "password": "password"
     }
+  ],
+  "allErrors": [
+    {
+      "type": "https://berlingroup.com/error-codes/TOKEN_INVALID",
+      "title": "OAuth2 token is not valid",
+      "detail": "The OAuth2 token associated to the TPP but is not valid for the addressed service/resource.",
+      "code": "TOKEN_INVALID",
+      "additionalErrors": [
+        {}
+      ],
+      "_links": {}
+    },
+    {
+      "type": "https://berlingroup.com/error-codes/CONSENT_UNKNOWN",
+      "title": "Consent is not valid",
+      "detail": "The Consent associated to the TPP but is not valid for the addressed service/resource.",
+      "code": "CONSENT_UNKNOWN",
+      "additionalErrors": [
+        {}
+      ],
+      "_links": {}
+    },
+    {
+      "type": "https://berlingroup.com/error-codes/FORMAT_ERROR",
+      "title": "Request is not valid",
+      "detail": "The request is not valid for the addressed service/resource.",
+      "code": "FORMAT_ERROR",
+      "additionalErrors": [
+        {}
+      ],
+      "_links": {}
+    }
   ]
 }
