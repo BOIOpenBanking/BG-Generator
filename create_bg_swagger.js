@@ -29,6 +29,7 @@ try {
   var apicAlias = config.apicAlias || "apic";
   var devPortal = config.devPortal || null;
 
+  var URL = require('url').URL;
   var apicOrganization = new URL(gatewayBaseURL).pathname.split('/')[1]
   var apicCatalog = new URL(gatewayBaseURL).pathname.split('/')[2]
 } catch (ex) {
@@ -114,7 +115,7 @@ if ((oauthFlow === "accessCode" && apiSpec === "openapi") || (oauthFlow === "aut
 
 // Delete old generated files
 console.log("Delete old generated files...");
-fs.mkdirSync(outPath, { recursive: true });
+try { fs.mkdirSync(outPath, { recursive: true }); } catch (ex) {}
 var files = fs.readdirSync(outPath);
 for (i in files) {
   console.log(files[i]);
@@ -292,11 +293,23 @@ try {
       beforeSplitCodeSnipet = beforeSplitCodeSnipet + "\n\n" + beforeSplitFileData;
     }
 
+    // Genarte starter code snippet for use in assembly block
+    console.log('Genarte on error code snippet for use in assembly block...');
+    var onErrorCodeSnipet = "console.log('In BG_ERROR catch block');";
+
+    var onErrorFileData;
+    if (fs.existsSync(snipetsPath + 'onError.js')) {
+      onErrorFileData = fs.readFileSync(snipetsPath + 'onError.js', 'utf8');
+    }
+    if (onErrorFileData) {
+      onErrorCodeSnipet = onErrorCodeSnipet + "\n\n" + onErrorFileData;
+    }
+
     // Append assembly block to the api
     console.log('Append assembly block to the api...');
-    var policiesVersion = "1.0.0";
+    var policyVersion = "1.0.0";
     if (gatewayType === "datapower-api-gateway") {
-      policiesVersion = "2.0.0";
+      policyVersion = "2.0.0";
     }
 
     var ibmExtension = {
@@ -313,7 +326,7 @@ try {
           {
             "gatewayscript": {
               "title": "gatewayscript",
-              "version": policiesVersion,
+              "version": policyVersion,
               "source": beforeSplitCodeSnipet
             }
           },
@@ -325,21 +338,21 @@ try {
               "cache-response": "protocol",
               "cache-ttl": 900,
               "stop-on-error": [],
-              "version": policiesVersion,
+              "version": policyVersion,
               "target-url": jsonStoreURL
             }
           },
           {
             "switch": {
               "title": "switch",
-              "version": policiesVersion,
+              "version": policyVersion,
               "case": []
             }
           },
           {
             "map": {
               "title": "map",
-              "version": policiesVersion,
+              "version": policyVersion,
               "inputs": {
                 "X-Request-ID": {
                   "schema": {
@@ -363,6 +376,64 @@ try {
                 }
               ]
             }
+          }
+        ],
+        "catch": [
+          {
+             "errors": [
+                "UnauthorizedError",
+                "ForbiddenError"
+             ],
+             "execute": [
+                {
+                   "gatewayscript": {
+                      "title": "gatewayscript",
+                      "version": policyVersion,
+                      "source": "console.log('In UnauthorizedError/ForbiddenError catch block');\n\napim.setvariable('error_code', 'TOKEN_INVALID', 'set');\napim.setvariable('http_code', '401', 'set');\napim.error('BG_ERROR');"
+                   }
+                }
+             ]
+          },
+          {
+             "errors": [
+                "ValidateError",
+                "BadRequestError"
+             ],
+             "execute": [
+                {
+                   "gatewayscript": {
+                      "title": "gatewayscript",
+                      "version": policyVersion,
+                      "source": "console.log('In ValidateError/BadRequestError catch block');\n\napim.setvariable('error_code', 'FORMAT_ERROR', 'set');\napim.setvariable('http_code', '500', 'set');\napim.error('BG_ERROR');"
+                   }
+                }
+             ]
+          },
+          {
+             "errors": [
+                "BG_ERROR"
+             ],
+             "execute": [
+                {
+                   "invoke": {
+                      "title": "invoke",
+                      "timeout": 60,
+                      "verb": "GET",
+                      "cache-response": "protocol",
+                      "cache-ttl": 900,
+                      "stop-on-error": [],
+                      "version": policyVersion,
+                      "target-url": jsonStoreURL
+                   }
+                },
+                {
+                   "gatewayscript": {
+                      "title": "gatewayscript",
+                      "version": policyVersion,
+                      "source": onErrorCodeSnipet
+                   }
+                }
+             ]
           }
         ]
       },
@@ -403,7 +474,7 @@ try {
           "execute": [
             {
               "gatewayscript": {
-                "version" : policiesVersion,
+                "version" : policyVersion,
                 "title" : "gatewayscript",
                 "source": operationCodeSnipet
               }
